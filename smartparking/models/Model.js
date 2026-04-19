@@ -1,0 +1,170 @@
+/**
+ * MODEL — Smart Parking
+ * Responsável pelos dados e lógica de negócio (frontend mock)
+ * Numa aplicação real, estes métodos fazem fetch à API REST
+ */
+
+const Model = (() => {
+
+  // ── Mock Data ──────────────────────────────────────────────────────────
+  const _data = {
+    parks: [
+      { id: 1, name: 'Parque das Antas', city: 'Porto', address: 'Avenida dos Aliados, Porto', capacity: 80, available: 32, img: 'https://images.unsplash.com/photo-1597328085773-b7c0c47a8cd5?w=400&q=80', open: '07:00', close: '22:00', lat: 41.163, lng: -8.583 },
+      { id: 2, name: 'Parque Centro',    city: 'Porto', address: 'Rua de Santa Catarina, Porto', capacity: 60, available: 27, img: 'https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=400&q=80', open: '07:00', close: '22:00', lat: 41.148, lng: -8.610 },
+      { id: 3, name: 'Parque Bairro Alto', city: 'Porto', address: 'Rua do Bairro Alto', capacity: 60, available: 6,  img: 'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=400&q=80', open: '07:00', close: '22:00', lat: 41.155, lng: -8.602 },
+      { id: 4, name: 'Parque Vila Nova de Gaia', city: 'Gaia', address: 'Avenida de Gaia', capacity: 60, available: 42, img: 'https://images.unsplash.com/photo-1573348722427-f1d6819fdf98?w=400&q=80', open: '07:00', close: '22:00', lat: 41.128, lng: -8.600 },
+      { id: 5, name: 'Parque Continente Shopping', city: 'Matosinhos', address: 'Via Norte, Matosinhos', capacity: 60, available: 27, img: 'https://images.unsplash.com/photo-1551703599-6b3e8379aa8c?w=400&q=80', open: '08:00', close: '23:00', lat: 41.189, lng: -8.697 },
+      { id: 6, name: 'Parque NortShopping', city: 'Matosinhos', address: 'NortShopping, Matosinhos', capacity: 60, available: 13, img: 'https://images.unsplash.com/photo-1590674899484-d5640e854abe?w=400&q=80', open: '08:00', close: '23:00', lat: 41.193, lng: -8.700 },
+    ],
+
+    users: [
+      { id: 1, name: 'João Silva',    email: 'joao@email.com',    role: 'user',  status: 'active',   contact: '912000001' },
+      { id: 2, name: 'Ana Costa',     email: 'ana@email.com',     role: 'user',  status: 'blocked',  contact: '912000002' },
+      { id: 3, name: 'Pedro Lopes',   email: 'pedro@email.com',   role: 'user',  status: 'active',   contact: '912000003' },
+      { id: 4, name: 'Maria Ferreira',email: 'maria@email.com',   role: 'admin', status: 'active',   contact: '912000004' },
+    ],
+
+    reservations: [
+      { id: 1, park: 'Parque NortShopping', spot: 'A06', user: 'João Silva',   date: '2026-04-20', start: '09:00', end: '12:00', status: 'confirmed', amount: 4.50 },
+      { id: 2, park: 'Parque das Antas',    spot: 'B03', user: 'Pedro Lopes',  date: '2026-04-20', start: '14:00', end: '16:00', status: 'pending',   amount: 3.00 },
+      { id: 3, park: 'Parque Centro',       spot: 'C11', user: 'Ana Costa',    date: '2026-04-19', start: '10:00', end: '11:00', status: 'completed', amount: 1.50 },
+      { id: 4, park: 'Parque Bairro Alto',  spot: 'A02', user: 'João Silva',   date: '2026-04-21', start: '08:00', end: '18:00', status: 'confirmed', amount: 15.00 },
+    ],
+
+    vehicles: [
+      { id: 1, userId: 1, plate: 'AA-00-BB', brand: 'BMW',     model: 'M2',       color: 'Preto',   type: 'Ligeiro' },
+      { id: 2, userId: 1, plate: 'CC-11-DD', brand: 'Corvette',model: 'C7',       color: 'Cinzento',type: 'Ligeiro' },
+    ],
+
+    stats: {
+      totalReservations: 2547,
+      totalUsers: 1203,
+      activeParks: 6,
+      totalRevenue: 8921,
+      monthlyGrowth: { reservations: 12, users: 8, revenue: 15 },
+    },
+
+    testimonials: [
+      { id: 1, name: 'João Silva',    rating: 5, text: 'Muito fácil de usar! Consigo reservar em segundos e saber sempre que tempo é o processo de estacionamento.' },
+      { id: 2, name: 'Patrícia Lopes',rating: 5, text: 'Muito fácil de usar! Consigo reservar em segundos e saber sempre que tempo é o processo de estacionamento.' },
+      { id: 3, name: 'Catarina Silva',rating: 5, text: 'Muito fácil de usar! Consigo reservar em segundos e saber sempre que tempo é o processo de estacionamento.' },
+    ],
+
+    // Auth state (em produção: JWT no localStorage)
+    currentUser: null,
+  };
+
+  // ── Parks ────────────────────────────────────────────────────────────────
+  const getParks = () => [..._data.parks];
+
+  const getParkById = (id) => _data.parks.find(p => p.id === Number(id));
+
+  const searchParks = (query) => {
+    const q = query.toLowerCase();
+    return _data.parks.filter(p =>
+      p.name.toLowerCase().includes(q) || p.city.toLowerCase().includes(q)
+    );
+  };
+
+  const getParkOccupancy = (park) =>
+    Math.round(((park.capacity - park.available) / park.capacity) * 100);
+
+  // ── Users ────────────────────────────────────────────────────────────────
+  const getUsers = () => [..._data.users];
+
+  const getUserById = (id) => _data.users.find(u => u.id === Number(id));
+
+  const updateUserStatus = (id, status) => {
+    const user = _data.users.find(u => u.id === Number(id));
+    if (user) { user.status = status; return true; }
+    return false;
+  };
+
+  // ── Reservations ─────────────────────────────────────────────────────────
+  const getReservations = () => [..._data.reservations];
+
+  const addReservation = (reservation) => {
+    const newRes = { id: _data.reservations.length + 1, ...reservation, status: 'pending' };
+    _data.reservations.push(newRes);
+    return newRes;
+  };
+
+  const cancelReservation = (id) => {
+    const res = _data.reservations.find(r => r.id === Number(id));
+    if (res && res.status !== 'completed') { res.status = 'cancelled'; return true; }
+    return false;
+  };
+
+  // ── Vehicles ────────────────────────────────────────────────────────────
+  const getVehicles = () => [..._data.vehicles];
+
+  const getVehiclesByUser = (userId) =>
+    _data.vehicles.filter(v => v.userId === Number(userId));
+
+  const addVehicle = (vehicle) => {
+    const newV = { id: _data.vehicles.length + 1, ...vehicle };
+    _data.vehicles.push(newV);
+    return newV;
+  };
+
+  // ── Stats ─────────────────────────────────────────────────────────────────
+  const getStats = () => ({ ..._data.stats });
+
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  const login = (email, password) => {
+    // Mock auth — em produção: POST /api/auth/login
+    const user = _data.users.find(u => u.email === email);
+    if (user && password.length >= 6) {
+      _data.currentUser = { ...user };
+      localStorage.setItem('sp_user', JSON.stringify(_data.currentUser));
+      return { success: true, user: _data.currentUser };
+    }
+    return { success: false, error: 'Credenciais inválidas.' };
+  };
+
+  const register = (userData) => {
+    const exists = _data.users.find(u => u.email === userData.email);
+    if (exists) return { success: false, error: 'Email já registado.' };
+    const newUser = { id: _data.users.length + 1, role: 'user', status: 'active', ...userData };
+    _data.users.push(newUser);
+    _data.currentUser = { ...newUser };
+    localStorage.setItem('sp_user', JSON.stringify(_data.currentUser));
+    return { success: true, user: newUser };
+  };
+
+  const logout = () => {
+    _data.currentUser = null;
+    localStorage.removeItem('sp_user');
+  };
+
+  const getCurrentUser = () => {
+    if (_data.currentUser) return _data.currentUser;
+    const stored = localStorage.getItem('sp_user');
+    if (stored) {
+      _data.currentUser = JSON.parse(stored);
+      return _data.currentUser;
+    }
+    return null;
+  };
+
+  const isAdmin = () => {
+    const user = getCurrentUser();
+    return user && user.role === 'admin';
+  };
+
+  // ── Testimonials ──────────────────────────────────────────────────────────
+  const getTestimonials = () => [..._data.testimonials];
+
+  return {
+    getParks, getParkById, searchParks, getParkOccupancy,
+    getUsers, getUserById, updateUserStatus,
+    getReservations, addReservation, cancelReservation,
+    getVehicles, getVehiclesByUser, addVehicle,
+    getStats,
+    login, register, logout, getCurrentUser, isAdmin,
+    getTestimonials,
+  };
+
+})();
+
+window.Model = Model;
