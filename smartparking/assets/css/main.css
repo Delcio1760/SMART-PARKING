@@ -24,7 +24,7 @@
 
   /* Typography */
   --font-display: 'Syne', sans-serif;
-  --font-body:    'DM Sans', sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif; 
 
   /* Spacing */
   --space-xs:  0.25rem;
@@ -33,7 +33,7 @@
   --space-lg:  1.5rem;
   --space-xl:  2rem;
   --space-2xl: 3rem;
-  --space-3xl: 5rem;
+  --space-3xl: 8rem;
 
   /* Border radius */
   --radius-sm:   6px;
@@ -73,12 +73,20 @@ ul { list-style: none; }
 /* ---- Typography ---- */
 h1, h2, h3, h4, h5 {
   font-family: var(--font-display);
-  line-height: 1.2;
-  font-weight: 700;
+  line-height: 1.1; 
+  font-weight: 800;
+  letter-spacing: -0.03em; 
 }
 
-.text-accent { color: var(--color-accent); }
-.text-muted  { color: var(--color-text-muted); }
+.section-label {
+  font-size: 0.7rem; 
+  font-weight: 700;
+  letter-spacing: 0.2em; 
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin-bottom: var(--space-sm);
+  opacity: 0.8;
+}
 
 /* ---- Layout Utilities ---- */
 .container {
