@@ -1,7 +1,7 @@
 /**
  * MODEL — Smart Parking
  * Responsável pelos dados e lógica de negócio (frontend mock)
- * Numa aplicação real, estes métodos fazem fetch à API REST
+ *
  */
 
 const Model = (() => {
