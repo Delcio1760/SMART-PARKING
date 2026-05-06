@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minhas Reservas — Smart Parking</title>
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body data-page="reservations">
+
+  <div id="navbar-placeholder"></div>
+
+  <main class="page-wrapper">
+    <div class="container section">
+
+      <div class="flex-between" style="margin-bottom:var(--space-2xl)">
+        <div>
+          <div class="section-label">Reservas</div>
+          <h1 class="section-title" style="margin-bottom:0">Minhas Reservas</h1>
+        </div>
+        <a href="dashboard.html" class="btn btn-primary">+ Nova Reserva</a>
+      </div>
+
+      <!-- Summary cards -->
+      <div class="grid-4" style="margin-bottom:var(--space-2xl)">
+        <div class="stat-card">
+          <div class="stat-label">Total</div>
+          <div class="stat-value" style="font-size:1.8rem">4</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Ativas</div>
+          <div class="stat-value" style="font-size:1.8rem;color:var(--color-warning)">2</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Concluídas</div>
+          <div class="stat-value" style="font-size:1.8rem;color:var(--color-success)">1</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Canceladas</div>
+          <div class="stat-value" style="font-size:1.8rem;color:var(--color-danger)">0</div>
+        </div>
+      </div>
+
+      <!-- Filter bar -->
+      <div style="margin-bottom:var(--space-lg);display:flex;gap:var(--space-md);flex-wrap:wrap;align-items:center">
+        <input class="form-input" type="text" placeholder="Pesquisar reserva..." style="max-width:280px">
+        <select class="form-select" style="width:auto">
+          <option value="">Todos os estados</option>
+          <option value="confirmed">Confirmada</option>
+          <option value="pending">Pendente</option>
+          <option value="completed">Concluída</option>
+          <option value="cancelled">Cancelada</option>
+        </select>
+        <input class="form-input" type="date" style="width:auto">
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Parque</th>
+              <th>Lugar</th>
+              <th>Data</th>
+              <th>Horário</th>
+              <th>Estado</th>
+              <th>Valor</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="reservations-tbody">
+            <tr>
+              <td colspan="7" style="text-align:center;padding:2rem;color:var(--color-text-muted)">A carregar...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+  <div id="toast-container"></div>
+
+  <script src="models/Model.js"></script>
+  <script src="views/View.js"></script>
+  <script src="controllers/Controller.js"></script>
+</body>
+</html>

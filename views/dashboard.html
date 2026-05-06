@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Smart Parking</title>
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    .map-placeholder {
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      height: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      color: var(--color-text-muted);
+      position: relative;
+      overflow: hidden;
+      margin-bottom: var(--space-xl);
+    }
+    .map-placeholder img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.3;
+    }
+    .map-placeholder span { position: relative; z-index: 1; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-lg);
+    }
+    .section-header h2 {
+      font-size: 1.2rem;
+      font-family: var(--font-display);
+    }
+
+    .vehicles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: var(--space-md);
+    }
+
+    .filter-row {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr auto;
+      gap: var(--space-md);
+      align-items: end;
+      margin-bottom: var(--space-xl);
+    }
+    @media(max-width:768px) { .filter-row { grid-template-columns: 1fr; } }
+
+    /* Reserve modal */
+    .spot-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      margin: var(--space-lg) 0;
+    }
+    .spot {
+      aspect-ratio: 1;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all var(--transition);
+    }
+    .spot.free     { background: rgba(76,175,125,0.15); color: var(--color-success); border-color: rgba(76,175,125,0.3); }
+    .spot.free:hover { background: rgba(76,175,125,0.3); transform: scale(1.05); }
+    .spot.occupied { background: var(--color-surface-3); color: var(--color-text-faint); cursor: not-allowed; }
+    .spot.selected { background: var(--color-accent); color: #111; border-color: var(--color-accent); transform: scale(1.05); }
+  </style>
+</head>
+<body data-page="dashboard">
+
+  <div id="navbar-placeholder"></div>
+
+  <main class="page-wrapper">
+    <div class="container section">
+
+      <h1 style="font-size:1.8rem;font-family:var(--font-display);margin-bottom:var(--space-2xl)">
+        <span id="user-greeting">Olá</span> 👋
+      </h1>
+
+      <!-- Map -->
+      <div class="section-header">
+        <h2>Nossos parques no mapa</h2>
+      </div>
+      <div class="map-placeholder">
+        <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=1200&q=60" alt="Mapa">
+        <span>🗺️ Mapa interativo — integrar Leaflet.js / Google Maps</span>
+      </div>
+
+      <!-- Vehicles -->
+      <div class="section-header">
+        <h2>Meus Veículos</h2>
+      </div>
+      <div class="vehicles-grid" id="vehicles-list"></div>
+
+      <!-- Filters -->
+      <div style="margin-top:var(--space-2xl)">
+        <div class="section-header"><h2>Filtros</h2></div>
+        <div class="filter-row">
+          <div class="form-group">
+            <label class="form-label">Procurar parque ou localização</label>
+            <input class="form-input" id="park-search" placeholder="Procurar qualquer parque ou localização...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Selecione a localização</label>
+            <select class="form-select">
+              <option>Vila do Conde</option>
+              <option>Porto</option>
+              <option>Matosinhos</option>
+              <option>Gaia</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Check In / Check Out</label>
+            <input class="form-input" type="date">
+          </div>
+          <button class="btn btn-primary" style="height:42px">Agendar</button>
+        </div>
+      </div>
+
+      <!-- Favorite Parks -->
+      <div class="section-header">
+        <h2>Meus parques favoritos <span style="color:var(--color-accent)">★</span></h2>
+        <a href="#" style="font-size:0.85rem;color:var(--color-text-muted)">+ Adicionar parque</a>
+      </div>
+      <div class="grid-3" id="favorite-parks"></div>
+
+      <!-- All Parks -->
+      <div class="section-header" style="margin-top:var(--space-2xl)">
+        <h2>Parques disponíveis agora</h2>
+        <a href="#" style="font-size:0.85rem;color:var(--color-accent)">Ver todas →</a>
+      </div>
+      <div class="grid-3" id="all-parks"></div>
+
+    </div>
+  </main>
+
+  <!-- Reserve Modal -->
+  <div class="modal-overlay" id="modal-reserve">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Reservar Lugar</div>
+        <button class="modal-close">✕</button>
+      </div>
+
+      <form id="reserve-form">
+        <input type="hidden" id="reserve-park-id">
+        <div class="flex-col" style="gap:var(--space-md)">
+          <div style="padding:var(--space-md);background:var(--color-surface-2);border-radius:var(--radius-sm)">
+            <div style="font-size:0.8rem;color:var(--color-text-muted)">Parque selecionado</div>
+            <div style="font-weight:700;font-family:var(--font-display)" id="reserve-park-name">—</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Veículo</label>
+            <select class="form-select" id="reserve-vehicle">
+              <option>Nenhum veículo</option>
+            </select>
+          </div>
+
+          <div class="grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md)">
+            <div class="form-group">
+              <label class="form-label">Data</label>
+              <input class="form-input" id="reserve-date" type="date" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Hora de início</label>
+              <input class="form-input" id="reserve-start" type="time" min="07:00" max="22:00" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Hora de fim</label>
+            <input class="form-input" id="reserve-end" type="time" min="07:00" max="22:00" required>
+          </div>
+
+          <p style="font-size:0.78rem;color:var(--color-text-muted)">
+            ℹ️ Reservas disponíveis entre 07h00 e 22h00. Tarifa: €1.50/hora.
+          </p>
+
+          <button class="btn btn-primary" type="submit" style="width:100%">Confirmar Reserva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="footer-placeholder"></div>
+  <div id="toast-container"></div>
+
+  <script src="models/Model.js"></script>
+  <script src="views/View.js"></script>
+  <script src="controllers/Controller.js"></script>
+</body>
+</html>

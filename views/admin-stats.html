@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estatísticas — Smart Parking Admin</title>
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    .admin-layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 64px); }
+    @media(max-width:900px) { .admin-layout { grid-template-columns: 1fr; } }
+    .admin-sidebar { background: var(--color-surface); border-right: 1px solid var(--color-border); padding: var(--space-xl) var(--space-md); position: sticky; top: 64px; height: calc(100vh - 64px); overflow-y: auto; }
+    .admin-logo { font-family: var(--font-display); font-size: 1rem; font-weight: 800; margin-bottom: var(--space-xs); }
+    .admin-badge { font-size: 0.7rem; color: var(--color-accent); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: var(--space-xl); }
+    .admin-nav { display: flex; flex-direction: column; gap: 4px; }
+    .admin-nav-link { display: flex; align-items: center; gap: var(--space-sm); padding: var(--space-sm) var(--space-md); border-radius: var(--radius-sm); font-size: 0.875rem; color: var(--color-text-muted); cursor: pointer; transition: all var(--transition); text-decoration: none; }
+    .admin-nav-link:hover { background: var(--color-surface-2); color: var(--color-text); }
+    .admin-nav-link.active { background: var(--color-accent-glow); color: var(--color-accent); font-weight: 600; }
+    .admin-content { padding: var(--space-2xl); }
+
+    /* Charts */
+    .chart-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-xl); }
+    .chart-title { font-family: var(--font-display); font-size: 1rem; font-weight: 700; margin-bottom: var(--space-lg); }
+
+    /* Bar chart */
+    .bar-chart { display: flex; align-items: flex-end; gap: 10px; height: 180px; padding-top: var(--space-md); }
+    .bar-group { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .bar {
+      width: 100%;
+      background: var(--color-accent);
+      border-radius: 4px 4px 0 0;
+      transition: all 0.6s ease;
+      position: relative;
+      cursor: pointer;
+      min-height: 4px;
+    }
+    .bar:hover { background: var(--color-accent-dark); }
+    .bar-label { font-size: 0.7rem; color: var(--color-text-muted); }
+    .bar-value { font-size: 0.7rem; color: var(--color-accent); font-weight: 700; }
+
+    /* Line chart (CSS-only) */
+    .line-chart-wrap {
+      position: relative;
+      height: 180px;
+      display: flex;
+      align-items: flex-end;
+      gap: 0;
+    }
+    .line-chart-points {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: flex-end;
+      gap: 0;
+    }
+
+    /* Donut charts */
+    .donut-row { display: flex; gap: var(--space-2xl); flex-wrap: wrap; }
+    .donut-item { display: flex; flex-direction: column; align-items: center; gap: var(--space-sm); }
+    .donut {
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .donut-label {
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+      text-align: center;
+    }
+    .donut-value {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--color-accent);
+    }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); }
+    @media(max-width:900px) { .two-col { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body data-page="admin-stats">
+  <div id="navbar-placeholder"></div>
+
+  <main class="page-wrapper">
+    <div class="admin-layout">
+      <aside class="admin-sidebar">
+        <div class="admin-logo"><span class="text-accent">Smart</span> Parking</div>
+        <div class="admin-badge">Painel Admin</div>
+        <hr style="border-color:var(--color-border);margin-bottom:var(--space-lg)">
+        <nav class="admin-nav">
+          <a href="admin.html"              class="admin-nav-link">■ Dashboard</a>
+          <a href="admin-parks.html"        class="admin-nav-link">· Parques</a>
+          <a href="admin-users.html"        class="admin-nav-link">· Utilizadores</a>
+          <a href="admin-reservations.html" class="admin-nav-link">· Reservas</a>
+          <a href="admin-stats.html"        class="admin-nav-link active">· Estatísticas</a>
+        </nav>
+      </aside>
+
+      <div class="admin-content">
+        <div style="margin-bottom:var(--space-2xl)">
+          <h1 style="font-family:var(--font-display);font-size:2rem;font-weight:800">Estatísticas</h1>
+          <p style="color:var(--color-text-muted);font-size:0.9rem">Análise de desempenho do sistema</p>
+        </div>
+
+        <!-- KPI Stats -->
+        <div class="grid-4" style="margin-bottom:var(--space-2xl)" id="stat-reservations-wrap">
+          <div class="stat-card" id="stat-reservations">
+            <div class="stat-label">Reservas Totais</div>
+            <div class="stat-value">—</div>
+            <div class="stat-change up">—</div>
+          </div>
+          <div class="stat-card" id="stat-users">
+            <div class="stat-label">Utilizadores</div>
+            <div class="stat-value">—</div>
+            <div class="stat-change up">—</div>
+          </div>
+          <div class="stat-card" id="stat-parks">
+            <div class="stat-label">Parques Ativos</div>
+            <div class="stat-value">—</div>
+            <div class="stat-change">—</div>
+          </div>
+          <div class="stat-card" id="stat-revenue">
+            <div class="stat-label">Receita Total</div>
+            <div class="stat-value">—</div>
+            <div class="stat-change up">—</div>
+          </div>
+        </div>
+
+        <!-- Charts row 1 -->
+        <div class="two-col" style="margin-bottom:var(--space-xl)">
+          <!-- Reservations by month bar chart -->
+          <div class="chart-card">
+            <div class="chart-title">Reservas por mês</div>
+            <div class="bar-chart" id="bar-chart-reservations"></div>
+          </div>
+
+          <!-- Revenue line chart area -->
+          <div class="chart-card">
+            <div class="chart-title">Receita mensal (€)</div>
+            <div class="bar-chart" id="bar-chart-revenue"></div>
+          </div>
+        </div>
+
+        <!-- Charts row 2 -->
+        <div class="two-col" style="margin-bottom:var(--space-xl)">
+          <!-- Park occupancy -->
+          <div class="chart-card">
+            <div class="chart-title">Ocupação dos Parques</div>
+            <div id="park-occupancies"></div>
+          </div>
+
+          <!-- Spot types donut -->
+          <div class="chart-card">
+            <div class="chart-title">Distribuição por tipo de lugar</div>
+            <div style="margin-bottom:var(--space-lg)">
+              <canvas id="donut-canvas" width="220" height="220" style="display:block;margin:0 auto"></canvas>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:var(--space-sm)">
+              <div class="flex-between"><span style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:3px;background:#f5a623;display:inline-block"></span><span style="font-size:0.85rem">Normal</span></span><span style="font-weight:700">68%</span></div>
+              <div class="flex-between"><span style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:3px;background:#4caf7d;display:inline-block"></span><span style="font-size:0.85rem">Mobilidade Reduzida</span></span><span style="font-weight:700">17%</span></div>
+              <div class="flex-between"><span style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:3px;background:#4a9eff;display:inline-block"></span><span style="font-size:0.85rem">Carregamento Elétrico</span></span><span style="font-weight:700">15%</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <div id="toast-container"></div>
+  <script src="models/Model.js"></script>
+  <script src="views/View.js"></script>
+  <script src="controllers/Controller.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // ── Bar charts ────────────────────────────────────────────────────
+      const months  = ['Out', 'Nov', 'Dez', 'Jan', 'Fev', 'Mar', 'Abr'];
+      const resData = [180, 210, 240, 195, 290, 320, 380];
+      const revData = [540, 630, 720, 585, 870, 960, 1140];
+
+      const maxRes = Math.max(...resData);
+      const maxRev = Math.max(...revData);
+
+      const renderBarChart = (containerId, data, maxVal, color = 'var(--color-accent)') => {
+        const el = document.getElementById(containerId);
+        if (!el) return;
+        el.innerHTML = data.map((val, i) => `
+          <div class="bar-group">
+            <div class="bar-value">${val}</div>
+            <div class="bar" style="height:${Math.round((val / maxVal) * 160)}px;background:${color}"></div>
+            <div class="bar-label">${months[i]}</div>
+          </div>`).join('');
+      };
+
+      renderBarChart('bar-chart-reservations', resData, maxRes);
+      renderBarChart('bar-chart-revenue', revData, maxRev, '#4a9eff');
+
+      // ── Donut canvas ──────────────────────────────────────────────────
+      const canvas = document.getElementById('donut-canvas');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        const cx = 110, cy = 110, r = 80, inner = 50;
+        const slices = [
+          { val: 0.68, color: '#f5a623' },
+          { val: 0.17, color: '#4caf7d' },
+          { val: 0.15, color: '#4a9eff' },
+        ];
+        let start = -Math.PI / 2;
+        slices.forEach(s => {
+          const end = start + s.val * 2 * Math.PI;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.arc(cx, cy, r, start, end);
+          ctx.closePath();
+          ctx.fillStyle = s.color;
+          ctx.fill();
+          start = end;
+        });
+        // Hole
+        ctx.beginPath();
+        ctx.arc(cx, cy, inner, 0, 2 * Math.PI);
+        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--color-surface').trim() || '#1a1a1a';
+        ctx.fill();
+      }
+    });
+  </script>
+</body>
+</html>

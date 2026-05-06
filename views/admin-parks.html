@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Parques — Smart Parking Admin</title>
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    .admin-layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 64px); }
+    @media(max-width:900px) { .admin-layout { grid-template-columns: 1fr; } }
+    .admin-sidebar {
+      background: var(--color-surface);
+      border-right: 1px solid var(--color-border);
+      padding: var(--space-xl) var(--space-md);
+      position: sticky; top: 64px;
+      height: calc(100vh - 64px);
+      overflow-y: auto;
+    }
+    .admin-logo { font-family: var(--font-display); font-size: 1rem; font-weight: 800; margin-bottom: var(--space-xs); }
+    .admin-badge { font-size: 0.7rem; color: var(--color-accent); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: var(--space-xl); }
+    .admin-nav { display: flex; flex-direction: column; gap: 4px; }
+    .admin-nav-link { display: flex; align-items: center; gap: var(--space-sm); padding: var(--space-sm) var(--space-md); border-radius: var(--radius-sm); font-size: 0.875rem; color: var(--color-text-muted); cursor: pointer; transition: all var(--transition); text-decoration: none; }
+    .admin-nav-link:hover { background: var(--color-surface-2); color: var(--color-text); }
+    .admin-nav-link.active { background: var(--color-accent-glow); color: var(--color-accent); font-weight: 600; }
+    .admin-content { padding: var(--space-2xl); }
+  </style>
+</head>
+<body data-page="admin-parks">
+  <div id="navbar-placeholder"></div>
+
+  <main class="page-wrapper">
+    <div class="admin-layout">
+      <aside class="admin-sidebar">
+        <div class="admin-logo"><span class="text-accent">Smart</span> Parking</div>
+        <div class="admin-badge">Painel Admin</div>
+        <hr style="border-color:var(--color-border);margin-bottom:var(--space-lg)">
+        <nav class="admin-nav">
+          <a href="admin.html"              class="admin-nav-link">■ Dashboard</a>
+          <a href="admin-parks.html"        class="admin-nav-link active">· Parques</a>
+          <a href="admin-users.html"        class="admin-nav-link">· Utilizadores</a>
+          <a href="admin-reservations.html" class="admin-nav-link">· Reservas</a>
+          <a href="admin-stats.html"        class="admin-nav-link">· Estatísticas</a>
+        </nav>
+      </aside>
+
+      <div class="admin-content">
+        <div class="flex-between" style="margin-bottom:var(--space-2xl)">
+          <div>
+            <h1 style="font-family:var(--font-display);font-size:2rem;font-weight:800">Parques</h1>
+            <p style="color:var(--color-text-muted);font-size:0.9rem">Gestão dos parques de estacionamento</p>
+          </div>
+          <button class="btn btn-primary" id="btn-add-park">+ Adicionar Parque</button>
+        </div>
+
+        <!-- Search bar -->
+        <div style="margin-bottom:var(--space-lg);display:flex;gap:var(--space-md)">
+          <input class="form-input" type="text" placeholder="Pesquisar parque..." style="max-width:320px">
+          <select class="form-select" style="width:auto">
+            <option>Todas as cidades</option>
+            <option>Porto</option>
+            <option>Gaia</option>
+            <option>Matosinhos</option>
+          </select>
+        </div>
+
+        <!-- Parks grid cards -->
+        <div class="grid-3" id="admin-parks-grid" style="margin-bottom:var(--space-2xl)"></div>
+
+        <!-- Parks table -->
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Nome</th>
+                <th>Cidade</th>
+                <th>Capacidade</th>
+                <th>Disponíveis</th>
+                <th>Ocupação</th>
+                <th>Horário</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="parks-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add Park Modal -->
+  <div class="modal-overlay" id="modal-add-park">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Adicionar Parque</div>
+        <button class="modal-close">✕</button>
+      </div>
+      <div class="flex-col" style="gap:var(--space-md)">
+        <div class="form-group">
+          <label class="form-label">Nome do parque</label>
+          <input class="form-input" type="text" placeholder="Parque Centro">
+        </div>
+        <div class="grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md)">
+          <div class="form-group">
+            <label class="form-label">Cidade</label>
+            <input class="form-input" type="text" placeholder="Porto">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Capacidade</label>
+            <input class="form-input" type="number" placeholder="60">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Morada</label>
+          <input class="form-input" type="text" placeholder="Rua...">
+        </div>
+        <div class="grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md)">
+          <div class="form-group">
+            <label class="form-label">Abertura</label>
+            <input class="form-input" type="time" value="07:00">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fecho</label>
+            <input class="form-input" type="time" value="22:00">
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%">Guardar Parque</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="models/Model.js"></script>
+  <script src="views/View.js"></script>
+  <script src="controllers/Controller.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Render park grid cards
+      const grid = document.getElementById('admin-parks-grid');
+      if (grid) {
+        grid.innerHTML = Model.getParks().map(p => View.renderParkCard(p)).join('');
+      }
+      // Add park modal
+      document.getElementById('btn-add-park')?.addEventListener('click', () => View.openModal('modal-add-park'));
+      document.querySelectorAll('.modal-close').forEach(b => b.addEventListener('click', () => View.closeModal('modal-add-park')));
+    });
+  </script>
+</body>
+</html>
