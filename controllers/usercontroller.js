@@ -2,7 +2,7 @@ const user = require('../models/user');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-const secret = 'smartparking_secret'; // Lembrar depois de meter isso em env
+const SECRET = process.env.JWT_SECRET; // Chave secreta para JWT
 
 exports.register = async (req, res) => {
     try {
