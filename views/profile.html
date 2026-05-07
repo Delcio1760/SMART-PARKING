@@ -136,17 +136,26 @@
  
   <script src="../assets/js/View.js"></script>
 
-  <script>
-    // Set avatar initials after init
-    document.addEventListener('DOMContentLoaded', () => {
-      const user = Model.getCurrentUser();
-      if (user) {
-        const initials = user.name.split(' ').slice(0,2).map(n=>n[0]).join('');
-        document.getElementById('avatar-initials').textContent = initials;
-        document.getElementById('sidebar-name').textContent = user.name;
-        document.getElementById('sidebar-email').textContent = user.email;
-      }
-    });
-  </script>
+ <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // 1. Tenta obter o user para preencher a sidebar
+    const user = typeof Model !== 'undefined' ? Model.getCurrentUser() : JSON.parse(localStorage.getItem('user'));
+
+    // 2. INJETA A NAVBAR E FOOTER 
+    const body = document.body;
+    const navbarHTML = View.renderNavbar(user); // Passamos o user aqui
+    const footerHTML = View.renderFooter();
+
+    body.insertAdjacentHTML('afterbegin', navbarHTML);
+    body.insertAdjacentHTML('beforeend', footerHTML);
+    
+    if (user) {
+      const initials = user.name.split(' ').slice(0,2).map(n=>n[0]).join('');
+      document.getElementById('avatar-initials').textContent = initials;
+      document.getElementById('sidebar-name').textContent = user.name;
+      document.getElementById('sidebar-email').textContent = user.email;
+    }
+  });
+</script>
 </body>
 </html>

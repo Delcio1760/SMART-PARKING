@@ -15,9 +15,13 @@ loginButton.addEventListener('click', async (e) => {
         body: JSON.stringify({email,password})
     })
     const data = await response.json();
-    if(!response.ok){
-        alert(data.error)
-        return;
+    if(response.ok){
+      localStorage.setItem('user',JSON.stringify(data)); // Guardar os dados do utilizador no localStorage
+      localStorage.setItem('token',data.token);      // Guardar o token de autenticação no localStorage
+       
+    }else{
+      alert(error.message);
+      return;
     }
     // Se o login correr bem o user será redrecionado para a página de perfil
     alert('Seja bem-vindo!')
