@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { User, Vehicle } = require('../models');
 
 const SECRET = process.env.JWT_SECRET; // Chave secreta para JWT
 
