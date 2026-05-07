@@ -20,7 +20,7 @@ form.addEventListener('submit', async (event) => {
     try{
 
         // Pedido A API para registar o utilizador
-        const response = await fetch('http://locahost:3000/users/register', {
+        const response = await fetch('http://localhost:3000/users/register', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
