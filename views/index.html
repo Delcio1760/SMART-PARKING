@@ -441,8 +441,22 @@
   <div id="footer-placeholder"></div>
   <div id="toast-container"></div>
 
-  <script src="models/Model.js"></script>
+
   <script src="../assets/css/js/View.js"></script>
-  <script src="controllers/Controller.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+    // 1. Seleciona onde queres injetar a navbar (pode ser numa tag <header> ou no <body>)
+    const body = document.body;
+    
+    // 2. Chama a função da View (passando null se não houver user logado)
+    const navbarHTML = View.renderNavbar(null);
+    const footerHTML = View.renderFooter();
+
+    // 3. Injeta no topo e no fundo
+    body.insertAdjacentHTML('afterbegin', navbarHTML);
+    body.insertAdjacentHTML('beforeend', footerHTML);
+  });
+  </script>
+
 </body>
 </html>
