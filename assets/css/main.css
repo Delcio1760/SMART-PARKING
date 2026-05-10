@@ -593,3 +593,23 @@ h1, h2, h3, h4, h5 {
   .grid-3, .grid-4, .grid-2 { grid-template-columns: 1fr; }
   .footer-grid { grid-template-columns: 1fr; }
 }
+
+
+/* Garante que o mapa fica atrás dos modais */
+#park-map,
+.leaflet-container {
+  position: relative;
+  z-index: 1;
+}
+
+/* Modal sempre acima do mapa */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+}
+
+.modal {
+  position: relative;
+  z-index: 10000;
+}
