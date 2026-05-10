@@ -16,7 +16,7 @@ loginButton.addEventListener('click', async (e) => {
     })
     const data = await response.json();
     if(response.ok){
-      localStorage.setItem('user',JSON.stringify(data)); // Guardar os dados do utilizador no localStorage
+      localStorage.setItem('user',JSON.stringify(data.user)); // CORRIGIDO: data.user em vez de data
       localStorage.setItem('token',data.token);      // Guardar o token de autenticação no localStorage
        
     }else{

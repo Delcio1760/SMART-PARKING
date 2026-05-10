@@ -36,17 +36,23 @@
       cursor: pointer;
       transition: all var(--transition);
       display: flex; align-items: center; gap: var(--space-sm);
+      text-decoration: none;
     }
     .sidebar-link:hover, .sidebar-link.active {
       background: var(--color-surface-2);
       color: var(--color-text);
     }
     .sidebar-link.active { color: var(--color-accent); }
+
+    .vehicle-card {
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+    }
   </style>
 </head>
 <body data-page="profile">
-
-  <div id="navbar-placeholder"></div>
 
   <main class="page-wrapper">
     <div class="container section">
@@ -55,22 +61,24 @@
       <h1 class="section-title" style="margin-bottom:var(--space-2xl)">Meu Perfil</h1>
 
       <div class="profile-layout">
+
         <!-- Sidebar -->
         <aside class="profile-sidebar">
           <div class="avatar" id="avatar-initials">?</div>
-          <div style="font-weight:700;font-family:var(--font-display)" id="sidebar-name">—</div>
+          <div style="font-weight:700;font-family:var(--font-display)" id="sidebar-name">A carregar...</div>
           <div style="font-size:0.85rem;color:var(--color-text-muted)" id="sidebar-email">—</div>
           <div class="sidebar-nav">
             <div class="sidebar-link active">👤 Dados Pessoais</div>
             <a href="reservations.html" class="sidebar-link">📅 Reservas</a>
-            <div class="sidebar-link" id="sidebar-vehicles-btn">🚗 Veículos</div>
+            <a href="dashboard.html" class="sidebar-link">🚗 Veículos</a>
             <div class="sidebar-link" style="color:var(--color-danger)" id="btn-logout">🚪 Terminar Sessão</div>
           </div>
         </aside>
 
         <!-- Main content -->
         <div class="flex-col" style="gap:var(--space-xl)">
-          <!-- Personal data -->
+
+          <!-- Dados Pessoais -->
           <div class="card" style="padding:var(--space-xl)">
             <h2 style="font-size:1.1rem;font-family:var(--font-display);margin-bottom:var(--space-xl)">Dados Pessoais</h2>
             <form id="profile-form">
@@ -78,31 +86,34 @@
                 <div class="grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md)">
                   <div class="form-group">
                     <label class="form-label">Nome completo</label>
-                    <input class="form-input" id="profile-name" type="text">
+                    <input class="form-input" id="profile-name" type="text" placeholder="O teu nome">
                   </div>
                   <div class="form-group">
                     <label class="form-label">Email</label>
-                    <input class="form-input" id="profile-email" type="email">
+                    <input class="form-input" id="profile-email" type="email" placeholder="O teu email">
                   </div>
                 </div>
                 <div class="form-group">
                   <label class="form-label">Contacto</label>
-                  <input class="form-input" id="profile-contact" type="tel">
+                  <input class="form-input" id="profile-contact" type="tel" placeholder="+351 9xx xxx xxx">
                 </div>
-                <div class="flex-gap" style="justify-content:flex-end">
+                <div class="flex-gap" style="justify-content:flex-end;align-items:center;gap:var(--space-md)">
+                  <span id="profile-msg" style="font-size:0.85rem;color:var(--color-success)"></span>
                   <button class="btn btn-primary" type="submit">Guardar alterações</button>
                 </div>
               </div>
             </form>
           </div>
 
-          <!-- Vehicles section -->
+          <!-- Veículos -->
           <div class="card" style="padding:var(--space-xl)">
             <h2 style="font-size:1.1rem;font-family:var(--font-display);margin-bottom:var(--space-lg)">Meus Veículos</h2>
-            <div class="vehicles-grid" id="vehicles-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--space-md)"></div>
+            <div id="vehicles-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--space-md)">
+              <div style="color:var(--color-text-muted);font-size:0.9rem">A carregar...</div>
+            </div>
           </div>
 
-          <!-- Recent reservations -->
+          <!-- Reservas Recentes -->
           <div class="card" style="padding:var(--space-xl)">
             <div class="flex-between" style="margin-bottom:var(--space-lg)">
               <h2 style="font-size:1.1rem;font-family:var(--font-display)">Reservas Recentes</h2>
@@ -120,42 +131,172 @@
                     <th>Valor</th>
                   </tr>
                 </thead>
-                <tbody id="profile-reservations"></tbody>
+                <tbody id="profile-reservations">
+                  <tr><td colspan="6" style="text-align:center;color:var(--color-text-muted);padding:var(--space-lg)">Sem reservas recentes.</td></tr>
+                </tbody>
               </table>
             </div>
           </div>
+
         </div>
       </div>
 
     </div>
   </main>
 
-  <div id="footer-placeholder"></div>
   <div id="toast-container"></div>
 
- 
   <script src="../assets/js/View.js"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', async () => {
 
- <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    // 1. Tenta obter o user para preencher a sidebar
-    const user = typeof Model !== 'undefined' ? Model.getCurrentUser() : JSON.parse(localStorage.getItem('user'));
+    // 1. Ler sessão
+    const token = localStorage.getItem('token');
+    let user = null;
+    try {
+      user = JSON.parse(localStorage.getItem('user'));
+    } catch (e) {}
 
-    // 2. INJETA A NAVBAR E FOOTER 
-    const body = document.body;
-    const navbarHTML = View.renderNavbar(user); // Passamos o user aqui
-    const footerHTML = View.renderFooter();
-
-    body.insertAdjacentHTML('afterbegin', navbarHTML);
-    body.insertAdjacentHTML('beforeend', footerHTML);
-    
-    if (user) {
-      const initials = user.name.split(' ').slice(0,2).map(n=>n[0]).join('');
-      document.getElementById('avatar-initials').textContent = initials;
-      document.getElementById('sidebar-name').textContent = user.name;
-      document.getElementById('sidebar-email').textContent = user.email;
+    if (!user || !token) {
+      alert('Sessão expirada. Por favor, faça login.');
+      window.location.href = 'login.html';
+      return;
     }
+
+    // 2. Injetar Navbar e Footer
+    document.body.insertAdjacentHTML('afterbegin', View.renderNavbar(user));
+    document.body.insertAdjacentHTML('beforeend',  View.renderFooter());
+
+    // 3. Logout
+    document.getElementById('btn-logout')?.addEventListener('click', () => {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      window.location.href = 'login.html';
+    });
+
+    // ── Função auxiliar: preencher sidebar e avatar ─────────────────────
+    function fillSidebar(u) {
+      const initials = u.name
+        ? u.name.split(' ').slice(0, 2).map(n => n[0].toUpperCase()).join('')
+        : '?';
+      document.getElementById('avatar-initials').textContent = initials;
+      document.getElementById('sidebar-name').textContent   = u.name  || '—';
+      document.getElementById('sidebar-email').textContent  = u.email || '—';
+    }
+
+    // ── Função auxiliar: preencher formulário ───────────────────────────
+    function fillForm(u) {
+      document.getElementById('profile-name').value    = u.name    || '';
+      document.getElementById('profile-email').value   = u.email   || '';
+      document.getElementById('profile-contact').value = u.contact || '';
+    }
+
+    // 4. Preencher com dados do localStorage imediatamente (sem esperar fetch)
+    fillSidebar(user);
+    fillForm(user);
+
+    // 5. Ir buscar dados frescos à BD via GET /users/me
+    try {
+      const res = await fetch('http://localhost:3000/users/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        const freshUser = await res.json();
+
+        // Atualizar localStorage com dados frescos
+        const merged = { ...user, ...freshUser };
+        localStorage.setItem('user', JSON.stringify(merged));
+
+        // Atualizar UI
+        fillSidebar(merged);
+        fillForm(merged);
+      } else if (res.status === 403) {
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        window.location.href = 'login.html';
+        return;
+      }
+    } catch (err) {
+      console.warn('Não foi possível refrescar o perfil:', err.message);
+      // Continua com os dados do localStorage
+    }
+
+    // 6. Guardar alterações do perfil — PUT /users/me
+    document.getElementById('profile-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name    = document.getElementById('profile-name').value.trim();
+      const email   = document.getElementById('profile-email').value.trim();
+      const contact = document.getElementById('profile-contact').value.trim();
+      const msgEl   = document.getElementById('profile-msg');
+
+      msgEl.textContent = '';
+      msgEl.style.color = 'var(--color-success)';
+
+      try {
+        const res = await fetch('http://localhost:3000/users/me', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ name, email, contact })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          // Atualizar localStorage com dados atualizados
+          const updated = { ...user, ...data.user };
+          localStorage.setItem('user', JSON.stringify(updated));
+          user = updated;
+
+          fillSidebar(updated);
+          msgEl.textContent = '✓ Perfil guardado com sucesso!';
+          View.showToast('Perfil atualizado!', 'success');
+        } else {
+          msgEl.style.color = 'var(--color-danger)';
+          msgEl.textContent = data.error || 'Erro ao guardar.';
+        }
+      } catch (err) {
+        msgEl.style.color = 'var(--color-danger)';
+        msgEl.textContent = 'Erro ao ligar ao servidor.';
+      }
+    });
+
+    // 7. Carregar veículos — GET /users/me/vehicles
+    try {
+      const res = await fetch('http://localhost:3000/users/me/vehicles', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      const grid = document.getElementById('vehicles-list');
+
+      if (res.ok) {
+        const vehicles = await res.json();
+
+        if (vehicles.length === 0) {
+          grid.innerHTML = `<div style="color:var(--color-text-muted);font-size:0.9rem">Nenhum veículo registado.</div>`;
+        } else {
+          grid.innerHTML = vehicles.map(v => `
+            <div class="vehicle-card">
+              <div style="font-size:1.4rem;margin-bottom:var(--space-sm)">🚗</div>
+              <div style="font-weight:700;font-size:0.9rem">${v.brand} ${v.model}</div>
+              <div style="font-size:0.8rem;color:var(--color-text-muted);margin-top:4px">${v.license_plate}</div>
+              <div style="font-size:0.75rem;color:var(--color-text-faint);margin-top:2px">${v.color} · ${v.vehicle_type}</div>
+            </div>
+          `).join('');
+        }
+      } else {
+        grid.innerHTML = `<div style="color:var(--color-text-muted)">Erro ao carregar veículos.</div>`;
+      }
+    } catch (err) {
+      document.getElementById('vehicles-list').innerHTML =
+        `<div style="color:var(--color-text-muted)">Erro ao ligar ao servidor.</div>`;
+    }
+
   });
-</script>
+  </script>
 </body>
 </html>
