@@ -32,7 +32,7 @@ const { sequelize } = require('./models');
 
 sequelize.authenticate()
   .then(() => {
-    console.log('MySQL conectado ✓');
+    console.log('MySQL conectado');
   })
   .catch(err => {
     console.error(err);
