@@ -20,7 +20,7 @@ exports.authMiddleware = (req, res, next) => {
     }
 };
 
-// ── Registo ───────────────────────────────────────────────────────────────
+// Registo 
 exports.register = async (req, res) => {
     try {
         const { name, email, password, contact, plate } = req.body;
@@ -59,7 +59,7 @@ exports.register = async (req, res) => {
     }
 };
 
-// ── Login ─────────────────────────────────────────────────────────────────
+// Login 
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
