@@ -211,6 +211,7 @@
   <div id="toast-container"></div>
 
   <script src="../assets/js/View.js"></script>
+  <script src="../assets/js/vehicles.js"></script>
   <script>
   document.addEventListener('DOMContentLoaded', async () => {
     // 1. Ler sessão
@@ -328,34 +329,25 @@
       }
     });
 
-    // 7. Carregar veículos — GET /users/me/vehicles
     
-    function renderVehicleCard(V){
-      const card = document.createElement('div');
-      card.className = 'vehicle-card';
-      card.innerHTML = `
-      <div></div>
-      <div>${V.brand} ${V.model}</div>
-      <div>${V.license_plate}</div>
-      <div>${V.color} . ${V.vehicle_type}</div>`;
-      return card;
-    }
-
-    async function loadVehicles(){
-      const grid = document.getElementById('vehicles-list');
-      grid.innerHTML = ''
-      const res = await fetch('http://localhost:3000/users/me/vehicles',{
-        headers:{'Authorization' : `Bearer ${token}`}
-      });
-      const vehicles = await res.json();
-
-      if(vehicles.length === 0){
-        grid.textContent = 'Nenhum veículo registado.';
-        return;
-      }
-      vehicles.forEach(V => {grid.appendChild(renderVehicleCard(V))});
-    }
   });
+  // Modal — abrir/fechar
+  const modal = document.getElementById('vehicle-modal');
+  document.getElementById('btn-add-vehicle').addEventListener('click', () => {
+    modal.classList.add('open');
+  });
+  
+  document.getElementById('btn-close-modal').addEventListener('click', () => {
+  modal.classList.remove('open');
+  });
+  document.getElementById('btn-cancel-vehicle').addEventListener('click', () => {
+  modal.classList.remove('open');
+  });
+
+  modal.addEventListener('click', (e) => {
+  if (e.target === modal) modal.classList.remove('open');
+  });
+  
   </script>
 </body>
 </html>
