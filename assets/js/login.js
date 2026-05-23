@@ -20,7 +20,7 @@ loginButton.addEventListener('click', async (e) => {
       localStorage.setItem('token',data.token);      // Guardar o token de autenticação no localStorage
        
     }else{
-      alert(error.message);
+      alert(data.error);
       return;
     }
     // Se o login correr bem o user será redrecionado para a página de perfil

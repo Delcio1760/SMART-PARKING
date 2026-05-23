@@ -50,20 +50,6 @@
       border-radius: var(--radius-md);
       padding: var(--space-md);
     }
-    
-  .modal-overlay {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,0.6); z-index: 1000;
-  align-items: center; justify-content: center;
-  }
-  .modal-overlay.open { display: flex; }
-  .modal-box {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-xl);
-    padding: var(--space-xl);
-    width: 100%; max-width: 460px;
-  }
   </style>
 </head>
 <body data-page="profile">
@@ -123,60 +109,12 @@
          <div class="card" style="padding:var(--space-xl)">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-lg)">
             <h2 style="font-size:1.1rem;font-family:var(--font-display)">Meus Veículos</h2>
-            <button class="btn btn-primary" id="btn-add-vehicle" style="font-size:0.85rem;padding:8px 16px">+ Adicionar Veículo</button>
+            <a href="add-vehicle.html" class="btn btn-primary" style="font-size:0.85rem;padding:8px 16px">+ Adicionar Veículo</a>
           </div>
           <div id="vehicles-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--space-md)">
             <div style="color:var(--color-text-muted);font-size:0.9rem">A carregar...</div>
           </div>
         </div>
-
-      <!-- Modal -->
-            <div class="modal-overlay" id="vehicle-modal">
-              <div class="modal-box">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-lg)">
-                  <h3 style="font-family:var(--font-display)">Adicionar Veículo</h3>
-                  <span id="btn-close-modal" style="cursor:pointer;font-size:1.2rem">✕</span>
-                </div>
-                <form id="vehicle-form">
-                  <div class="flex-col" style="gap:var(--space-md)">
-                    <div class="form-group">
-                      <label class="form-label">Matrícula *</label>
-                      <input class="form-input" id="v-plate" type="text" placeholder="AA-00-BB" required>
-                    </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md)">
-                      <div class="form-group">
-                        <label class="form-label">Marca *</label>
-                        <input class="form-input" id="v-brand" type="text" placeholder="Toyota" required>
-                      </div>
-                      <div class="form-group">
-                        <label class="form-label">Modelo *</label>
-                        <input class="form-input" id="v-model" type="text" placeholder="Corolla" required>
-                      </div>
-                    </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md)">
-                      <div class="form-group">
-                        <label class="form-label">Cor</label>
-                        <input class="form-input" id="v-color" type="text" placeholder="Preto">
-                      </div>
-                      <div class="form-group">
-                        <label class="form-label">Tipo de combustível</label>
-                        <select class="form-input" id="v-type">
-                          <option value="Gasolina">Gasolina</option>
-                          <option value="Diesel">Diesel</option>
-                          <option value="Elétrico">Elétrico</option>
-                          <option value="Híbrido">Híbrido</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div style="display:flex;justify-content:flex-end;gap:var(--space-md);margin-top:var(--space-sm)">
-                      <span id="vehicle-msg" style="font-size:0.85rem;align-self:center"></span>
-                      <button type="button" class="btn" id="btn-cancel-vehicle">Cancelar</button>
-                      <button type="submit" class="btn btn-primary">Guardar</button>
-                    </div>
-                  </div>
-                </form>
-              </div>
-            </div>
           <!-- Reservas Recentes -->
           <div class="card" style="padding:var(--space-xl)">
             <div class="flex-between" style="margin-bottom:var(--space-lg)">
@@ -209,6 +147,7 @@
   </main>
 
   <div id="toast-container"></div>
+  
 
   <script src="../assets/js/View.js"></script>
   <script src="../assets/js/vehicles.js"></script>
@@ -329,25 +268,11 @@
       }
     });
 
+    loadVehicles(token); // Carregar veículos do utilizador
+    initVehicleModal(token); 
+
     
   });
-  // Modal — abrir/fechar
-  const modal = document.getElementById('vehicle-modal');
-  document.getElementById('btn-add-vehicle').addEventListener('click', () => {
-    modal.classList.add('open');
-  });
-  
-  document.getElementById('btn-close-modal').addEventListener('click', () => {
-  modal.classList.remove('open');
-  });
-  document.getElementById('btn-cancel-vehicle').addEventListener('click', () => {
-  modal.classList.remove('open');
-  });
-
-  modal.addEventListener('click', (e) => {
-  if (e.target === modal) modal.classList.remove('open');
-  });
-  
   </script>
 </body>
 </html>
