@@ -50,6 +50,20 @@
       border-radius: var(--radius-md);
       padding: var(--space-md);
     }
+    
+  .modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6); z-index: 1000;
+  align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    width: 100%; max-width: 460px;
+  }
   </style>
 </head>
 <body data-page="profile">
@@ -106,13 +120,63 @@
           </div>
 
           <!-- Veículos -->
-          <div class="card" style="padding:var(--space-xl)">
-            <h2 style="font-size:1.1rem;font-family:var(--font-display);margin-bottom:var(--space-lg)">Meus Veículos</h2>
-            <div id="vehicles-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--space-md)">
-              <div style="color:var(--color-text-muted);font-size:0.9rem">A carregar...</div>
-            </div>
+         <div class="card" style="padding:var(--space-xl)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-lg)">
+            <h2 style="font-size:1.1rem;font-family:var(--font-display)">Meus Veículos</h2>
+            <button class="btn btn-primary" id="btn-add-vehicle" style="font-size:0.85rem;padding:8px 16px">+ Adicionar Veículo</button>
           </div>
+          <div id="vehicles-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--space-md)">
+            <div style="color:var(--color-text-muted);font-size:0.9rem">A carregar...</div>
+          </div>
+        </div>
 
+      <!-- Modal -->
+            <div class="modal-overlay" id="vehicle-modal">
+              <div class="modal-box">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-lg)">
+                  <h3 style="font-family:var(--font-display)">Adicionar Veículo</h3>
+                  <span id="btn-close-modal" style="cursor:pointer;font-size:1.2rem">✕</span>
+                </div>
+                <form id="vehicle-form">
+                  <div class="flex-col" style="gap:var(--space-md)">
+                    <div class="form-group">
+                      <label class="form-label">Matrícula *</label>
+                      <input class="form-input" id="v-plate" type="text" placeholder="AA-00-BB" required>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md)">
+                      <div class="form-group">
+                        <label class="form-label">Marca *</label>
+                        <input class="form-input" id="v-brand" type="text" placeholder="Toyota" required>
+                      </div>
+                      <div class="form-group">
+                        <label class="form-label">Modelo *</label>
+                        <input class="form-input" id="v-model" type="text" placeholder="Corolla" required>
+                      </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md)">
+                      <div class="form-group">
+                        <label class="form-label">Cor</label>
+                        <input class="form-input" id="v-color" type="text" placeholder="Preto">
+                      </div>
+                      <div class="form-group">
+                        <label class="form-label">Tipo de combustível</label>
+                        <select class="form-input" id="v-type">
+                          <option value="Gasolina">Gasolina</option>
+                          <option value="Diesel">Diesel</option>
+                          <option value="Elétrico">Elétrico</option>
+                          <option value="Híbrido">Híbrido</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div style="display:flex;justify-content:flex-end;gap:var(--space-md);margin-top:var(--space-sm)">
+                      <span id="vehicle-msg" style="font-size:0.85rem;align-self:center"></span>
+                      <button type="button" class="btn" id="btn-cancel-vehicle">Cancelar</button>
+                      <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
           <!-- Reservas Recentes -->
           <div class="card" style="padding:var(--space-xl)">
             <div class="flex-between" style="margin-bottom:var(--space-lg)">
@@ -149,7 +213,6 @@
   <script src="../assets/js/View.js"></script>
   <script>
   document.addEventListener('DOMContentLoaded', async () => {
-
     // 1. Ler sessão
     const token = localStorage.getItem('token');
     let user = null;
@@ -266,36 +329,32 @@
     });
 
     // 7. Carregar veículos — GET /users/me/vehicles
-    try {
-      const res = await fetch('http://localhost:3000/users/me/vehicles', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      const grid = document.getElementById('vehicles-list');
-
-      if (res.ok) {
-        const vehicles = await res.json();
-
-        if (vehicles.length === 0) {
-          grid.innerHTML = `<div style="color:var(--color-text-muted);font-size:0.9rem">Nenhum veículo registado.</div>`;
-        } else {
-          grid.innerHTML = vehicles.map(v => `
-            <div class="vehicle-card">
-              <div style="font-size:1.4rem;margin-bottom:var(--space-sm)">🚗</div>
-              <div style="font-weight:700;font-size:0.9rem">${v.brand} ${v.model}</div>
-              <div style="font-size:0.8rem;color:var(--color-text-muted);margin-top:4px">${v.license_plate}</div>
-              <div style="font-size:0.75rem;color:var(--color-text-faint);margin-top:2px">${v.color} · ${v.vehicle_type}</div>
-            </div>
-          `).join('');
-        }
-      } else {
-        grid.innerHTML = `<div style="color:var(--color-text-muted)">Erro ao carregar veículos.</div>`;
-      }
-    } catch (err) {
-      document.getElementById('vehicles-list').innerHTML =
-        `<div style="color:var(--color-text-muted)">Erro ao ligar ao servidor.</div>`;
+    
+    function renderVehicleCard(V){
+      const card = document.createElement('div');
+      card.className = 'vehicle-card';
+      card.innerHTML = `
+      <div></div>
+      <div>${V.brand} ${V.model}</div>
+      <div>${V.license_plate}</div>
+      <div>${V.color} . ${V.vehicle_type}</div>`;
+      return card;
     }
 
+    async function loadVehicles(){
+      const grid = document.getElementById('vehicles-list');
+      grid.innerHTML = ''
+      const res = await fetch('http://localhost:3000/users/me/vehicles',{
+        headers:{'Authorization' : `Bearer ${token}`}
+      });
+      const vehicles = await res.json();
+
+      if(vehicles.length === 0){
+        grid.textContent = 'Nenhum veículo registado.';
+        return;
+      }
+      vehicles.forEach(V => {grid.appendChild(renderVehicleCard(V))});
+    }
   });
   </script>
 </body>

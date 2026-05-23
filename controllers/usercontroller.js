@@ -158,3 +158,26 @@ exports.getMyVehicles = async (req, res) => {
         return res.status(500).json({ error: err.message });
     }
 };
+
+// Adicionar veículo: POST /users/me/vehicles
+exports.addVehicle = async (req, res) => {
+    try {
+        const {license_plate, brand, model, color, vehicle_type} = req.body;
+
+        if(!license_plate || !brand || !model || !color || !vehicle_type){
+            return res.status(400).json({error: 'Campo/s obrigatório(s) em falta'});
+        }
+        const vehicle = await Vehicle.create({
+            license_plate,
+            brand,
+            model,
+            color : color || 'Não defenida',
+            vehicle_type : vehicle_type || 'Gasolina',
+            id_user: req.userId
+        });
+        return res.status(201).json({message: 'Veículo adicionado', vehicle});  
+
+    }catch(err){
+        return res.status(500).json({error: err.message});
+    }
+}
