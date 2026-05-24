@@ -46,6 +46,10 @@ module.exports = (sequelize) => {
 
     lng: {
       type: DataTypes.DECIMAL(11, 8)
+    },
+    img:{
+      type: DataTypes.STRING(255),
+      allowNull: true
     }
 
   }, {

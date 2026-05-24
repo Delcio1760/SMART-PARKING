@@ -31,7 +31,9 @@ router.get('/', async (req, res) => {
 
       lat: Number(park.lat),
 
-      lng: Number(park.lng)
+      lng: Number(park.lng),
+      img: park.img || null
+      
 
     }));
 
