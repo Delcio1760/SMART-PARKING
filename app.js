@@ -27,6 +27,7 @@ app.listen(port, () => {
 const parksRoutes = require('./routes/parks');
 
 app.use('/api/parks', parksRoutes);
+app.use('/reservations', require('./routes/reservations'));
 
 const { sequelize } = require('./models');
 

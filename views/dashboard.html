@@ -85,6 +85,57 @@
         grid-template-columns: 1fr;
       }
     }
+
+  /* Estilos para o Mapa Visual de Lugares */
+  .spots-grid-container {
+  margin-top: var(--space-md);
+  margin-bottom: var(--space-md);
+  }
+
+.spots-layout {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  background: #1e1e1e;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.spot-cell {
+  padding: 8px;
+  text-align: center;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
+  transition: all 0.2s ease;
+}
+
+.spot-cell:hover:not(.occupied) {
+  background: #3a3a3a;
+  border-color: var(--color-accent);
+}
+
+.spot-cell.occupied {
+  background: #3d1a1a;
+  border-color: #8b0000;
+  color: #a0a0a0;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.spot-cell.selected {
+  background: var(--color-accent);
+  color: #000;
+  border-color: #fff;
+  box-shadow: 0 0 8px var(--color-accent);
+}
   </style>
 </head>
 
@@ -179,6 +230,19 @@
             <select class="form-select" id="reserve-vehicle">
               <option>Nenhum veículo</option>
             </select>
+            <!-- Campo invisível para guardar o ID do lugar selecionado pelo utilizador -->
+            <input type="hidden" id="selected-spot-id">
+
+          <div class="form-group spots-grid-container">
+          <label class="form-label">Selecione o Lugar de Estacionamento</label>
+          <div class="spots-layout" id="spots-grid">
+          <!-- Os lugares reais da BD serão renderizados aqui pelo JS -->
+          <div style="grid-column: span 5; text-align: center; color: var(--color-text-muted);">
+            A carregar lugares...
+          </div>
+        </div>
+      </div>
+            </div>
           </div>
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md)">
@@ -216,13 +280,15 @@
   <script src="../assets/js/View.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script src="../assets/js/map.js"></script>
+  <script src="../assets/js/reservations.js"></script>
 
   <script>
+     let parks = [];
     document.addEventListener('DOMContentLoaded', () => {
 
       const storedUser = localStorage.getItem('user');
       let user = null;
-      let parks = [];
+     
 
       try {
         user = storedUser ? JSON.parse(storedUser) : null;
@@ -266,7 +332,7 @@
               MapModule.focusPark(park);
             }
 
-            openReserveModal(id);
+           window.openReservationModal(id);
           });
         });
       }
@@ -284,7 +350,7 @@
           console.log('PARKS DA API:', parks);
 
           MapModule.init('park-map', parks, (parkId) => {
-            openReserveModal(parkId);
+            window.openReservationModal(parkId);
           });
 
           renderCards('favorite-parks', parks.slice(0, 3));
@@ -318,58 +384,10 @@
       document.getElementById('park-search')?.addEventListener('input', filterParks);
       document.getElementById('city-filter')?.addEventListener('change', filterParks);
 
-      function openReserveModal(parkId) {
-        const park = parks.find(p => p.id === Number(parkId));
-
-        if (!park) return;
-
-        document.getElementById('reserve-park-id').value = park.id;
-        document.getElementById('reserve-park-name').textContent = park.name;
-        document.getElementById('reserve-date').value = new Date().toISOString().split('T')[0];
-
-        document.getElementById('modal-reserve').classList.add('active');
-      }
-
-      document.querySelector('.modal-close')?.addEventListener('click', () => {
-        document.getElementById('modal-reserve').classList.remove('active');
-      });
-
-      document.getElementById('modal-reserve')?.addEventListener('click', (e) => {
-        if (e.target === e.currentTarget) {
-          e.currentTarget.classList.remove('active');
-        }
-      });
-
-      document.getElementById('reserve-form')?.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        const date = document.getElementById('reserve-date').value;
-        const start = document.getElementById('reserve-start').value;
-        const end = document.getElementById('reserve-end').value;
-
-        if (!date || !start || !end) {
-          View.showToast('Preenche todos os campos.', 'error');
-          return;
-        }
-
-        View.showToast('Reserva submetida com sucesso! ✓', 'success');
-        document.getElementById('modal-reserve').classList.remove('active');
-      });
-
-      document.addEventListener('click', (e) => {
-        if (e.target.id === 'btn-logout') {
-          localStorage.removeItem('user');
-          localStorage.removeItem('sp_user');
-
-          View.showToast('Sessão terminada.', 'info');
-
-          setTimeout(() => {
-            window.location.href = 'index.html';
-          }, 800);
-        }
-      });
+     
 
       loadParks();
+      
 
     });
   </script>

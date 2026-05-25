@@ -51,4 +51,18 @@ router.get('/', async (req, res) => {
 
 });
 
+router.get('/:id/spots', async(req, res) => {
+  try{
+    const {ParkingSpot} = require('../models');
+    const spots = await ParkingSpot.findAll({
+      where:{id_park: req.params.id},
+      raw: true
+    });
+    res.json(spots);
+
+  }catch(err){
+    res.status(500).json({error: err.message})
+  }
+});
+
 module.exports = router;
