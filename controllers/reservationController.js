@@ -26,13 +26,13 @@ exports.createReservation = async (req, res) => {
         if(existing)return res.status(409).json({error: 'Este veículo já possui uma reserva ativa para esta data'});
 
         // Criar a reserva
-        const reservation = await Reservation.create({
-            id_spot,
-            id_vehicle,
-            date,
-            start_time,
-            end_time,
-            status: 'active',
+       const reservation = await Reservation.create({
+            id_spot: Number(id_spot),
+            id_vehicle: Number(id_vehicle),
+            date: date,
+            start_time: start_time,
+            end_time: end_time,
+            status: 'active'
         });
 
         // Atualizar o estado do lugar para ocupado
@@ -46,19 +46,37 @@ exports.createReservation = async (req, res) => {
 
 // Listar as reservas do utilizador
 exports.getMyReservations = async(req, res) => {
+   
     try{
-        const vehicles = await Vehicle.findAll({where: {id_user: req.user.id}});
-        const vehicleIds = vehicles.map(v => v.id);
+        const userId = req.userId;
+        if (!userId) {
+            return res.status(401).json({ error: 'Utilizador não autenticado' });
+        }
+
+        // Vai buscar os veículos associados ao id_user 
+        const vehicles = await Vehicle.findAll({ where: { id_user: userId } });
         
+        // Mapeia os IDs dos veículos de forma segura
+        const vehicleIds = vehicles.map(v => v.id_vehicle || v.id);
+        
+        // Se o utilizador não tiver veículos, retorna uma lista vazia de reservas imediatamente
+        if (vehicleIds.length === 0) {
+            return res.json([]);
+        }
+
         const reservations = await Reservation.findAll({
-            where: {id_vehicle: vehicleIds},
-            include:[{model: ParkingSpot}]
+            where: { id_vehicle: vehicleIds },
+            include: [{ model: ParkingSpot }]
         });
-
-        return res.json(reservaitons);
-
+        return res.json(reservations);
+   
     }catch(err){
-        return res.status(500).json({error: err.message})
+        console.log("\n❌ ====== ERRO DETECTADO NO BACKEND ======");
+        console.log("Mensagem:", err.message);
+        console.log("Stack Trace:", err);
+        console.log("===========================================\n");
+
+        return res.status(500).json({ error: err.message });
     }
 
 }

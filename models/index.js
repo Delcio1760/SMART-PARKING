@@ -70,15 +70,7 @@ FavoritePark.belongsTo(ParkingPark, {
   foreignKey: 'id_park'
 });
 
-// USERS ↔ VEHICLES ↔ RESERVATIONS
-User.hasMany(Reservation, {
-  foreignKey: 'id_user',
-  onDelete: 'CASCADE'
-});
-
-Reservation.belongsTo(User, {
-  foreignKey: 'id_user'
-});
+// VEHICLES ↔ RESERVATIONS
 
 Vehicle.hasMany(Reservation, {
   foreignKey: 'id_vehicle',
