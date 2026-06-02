@@ -29,7 +29,7 @@ app.use('/reservations', require('./routes/reservations'));
 
 const { sequelize } = require('./models');
 
-sequelize.sync({ alter: true })
+sequelize.sync()
   .then(() => {
     console.log('MySQL Conectado e Tabelas Sincronizadas!');
     

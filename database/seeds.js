@@ -1,5 +1,10 @@
+// 1º OBRIGATORIAMENTE CARREGAR O .ENV
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
+
+// 2º SÓ DEPOIS IMPORTAR OS MODELOS
 const { faker } = require('@faker-js/faker');
-const { sequelize, User, Vehicle } = require('../models/index'); // Importa a instância do Sequelize e os modelos User e Vehicle
+const { sequelize, User, Vehicle } = require('../models/index');
 
 
 
@@ -23,7 +28,7 @@ async function semear() {
                 brand:         faker.vehicle.manufacturer(),
                 model:         faker.vehicle.model(),
                 color:         faker.color.human(),
-                vehicle_type:  'Ligeiro',
+                vehicle_type:  'Gasolina',
                 id_user:       novoUtilizador.id_user // <-- usa a PK do utilizador criado para a FK do veículo
             });
         }

@@ -1,43 +1,65 @@
-require ('dotenv').config();
-const {sequelize, ParkingPark, ParkingSpot} = require('../models');
+// 1º OBRIGATORIAMENTE CARREGAR O .ENV INDICANDO O CAMINHO CORRETO
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
+
+// 2º IMPORTAR A INSTÂNCIA DO SEQUELIZE
+const { sequelize } = require('../models/index');
 
 async function seedSpots(){
     try{
         await sequelize.authenticate();
-        console.log('MySQL conectado');
+        console.log('MySQL conectado com sucesso à BD da professora!');
 
-        //Buscar todos os parques de estacionamento
-        const parks = await ParkingPark.findAll({raw: true}); // Sem o "raw: true" para obter o nome por exemplo teria de ser park.dataValues.name
-                                                              // com "raw: true" o resultado vem como um objeto simples, daí é só fazer park.name
-                                                              // Porque aqui só precisamos de ler os dados dos parques não os modificar, se precissase modicar aí não o usariamos porque perderiamos os metodos .save() e .update()
+        // 3º IR BUSCAR OS MODELOS DIRETAMENTE DA INSTÂNCIA DO SEQUELIZE
+        // Isto evita erros de importação do index.js!
+        const ParkingPark = sequelize.models.ParkingPark;
+        const ParkingSpot = sequelize.models.ParkingSpot;
+
+        // Validar se o Sequelize carregou os modelos corretamente
+        if (!ParkingPark || !ParkingSpot) {
+            console.log("\n ERRO DE CONFIGURAÇÃO:");
+            console.log("Os modelos 'ParkingPark' ou 'ParkingSpot' não foram carregados no Sequelize.");
+            console.log("Modelos atualmente registados no teu projeto:", Object.keys(sequelize.models), "\n");
+            process.exit(1);
+        }
+
+        // 4º BUSCAR OS PARQUES EXISTENTES NA BD DA PROFESSORA
+        const parks = await ParkingPark.findAll({ raw: true }); 
+        console.log(` Encontrados ${parks.length} parques na base de dados.`);
+
+        // 5º LIMPAR LUGARES ANTIGOS NA BD DELA ANTES DE REPOVOAR
+        console.log(' A limpar lugares antigos para o teu grupo...');
+        await ParkingSpot.destroy({ where: {} });
+
+        // 6º SEMEAR OS LUGARES (SPOTS)
         for(const park of parks){
             const spots = [];
             const total = park.total_capacity;
 
-            for(let i=1; i<=total; i++){
+            for(let i = 1; i <= total; i++){
                 let spot_type = 'normal';
-                if(i > total - 3) spot_type = 'disabled'; // Últimas 3 vagas são para pessoas com deficiência
-                else if(i > total -8) spot_type = 'electric'; // penultimas 5 vagas são para veículos elétricos
+                if(i > total - 3) spot_type = 'disabled';     // Últimas 3 vagas são para pessoas com deficiência
+                else if(i > total - 8) spot_type = 'electric'; // Penúltimas 5 vagas são para veículos elétricos
 
                 spots.push({
-                    number : i,
+                    number: i,
                     status: 'free',
                     spot_type,
                     id_park: park.id_park
                 });
             }
+            
             await ParkingSpot.bulkCreate(spots);   
-                console.log(`${total} lugares criados para o parque ${park.name}`);
-                // O "bulkCreate" é um método do Sequelize que insere varios registros duma vez na BD
-                // No nosso caso temos 320 lugares no total (80+60+60+60+60) — sem bulkCreate faria 320 chamadas à BD, com bulkCreate faz 5 (uma por parque)
-            }
-            console.log('Seed concluido!');
-            process.exit(0);
+            console.log(`${total} lugares gerados e injetados para o parque: "${park.name}"`);
+        }
+        
+    
+        console.log('SEED COMPLETO! Os 320 lugares já estão na BD!');
+        process.exit(0);
 
-        }catch(err){
-        console.error('Erro:', err.message);
+    } catch(err) {
+        console.error('Erro durante o processo:', err.message);
         process.exit(1);
-
     }   
 }
 
