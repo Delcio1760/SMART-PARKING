@@ -15,13 +15,11 @@ app.use('/users', require('./routes/users'));
 //app.use('/vehicles', require('./routes/vehicles'));
 
 
-// const parksRoutes = require('./routes/parks');
-// app.use('/api/parks', parksRoutes);
+// app.use('/api/parks', parksRoutes);// const parksRoutes = require('./routes/parks');
 
-const port = 3000;
-app.listen(port, () => {
-    console.log(`Servidor rodando na porta ${port}`);
-});
+
+const port = process.env.PORT || 3000;
+
 
 
 const parksRoutes = require('./routes/parks');
@@ -31,10 +29,15 @@ app.use('/reservations', require('./routes/reservations'));
 
 const { sequelize } = require('./models');
 
-sequelize.authenticate()
+sequelize.sync({ alter: true })
   .then(() => {
-    console.log('MySQL conectado');
+    console.log('MySQL Conectado e Tabelas Sincronizadas!');
+    
+    // O servidor só começa a rodar se a BD ligar com sucesso
+    app.listen(port, () => {
+        console.log(`Servidor  rodando na porta ${port}`);
+    });
   })
   .catch(err => {
-    console.error(err);
+    console.error('Erro crucial ao ligar à Base de Dados:', err);
   });
