@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { User, Vehicle } = require('../models');
+const { User, Vehicle, FavoritePark, ParkingPark, Reservation } = require('../models');
 
 const SECRET = process.env.JWT_SECRET;
 
@@ -181,3 +181,140 @@ exports.addVehicle = async (req, res) => {
         return res.status(500).json({error: err.message});
     }
 }
+
+// Apagar veículo: DELETE /users/me/vehicles/:id
+exports.deleteVehicle = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.userId;
+
+        if (!userId) {
+            return res.status(401).json({ error: 'Utilizador não autenticado' });
+        }
+
+        const vehicle = await Vehicle.findOne({
+            where: {
+                id_vehicle: id,
+                id_user: userId
+            }
+        });
+
+        if (!vehicle) {
+            return res.status(404).json({ error: 'Veículo não encontrado ou sem permissão' });
+        }
+
+        // Verificar se existem reservas ativas ou pendentes para este veículo
+        const activeReservations = await Reservation.findOne({
+            where: {
+                id_vehicle: id,
+                status: ['confirmed', 'pending']
+            }
+        });
+
+        if (activeReservations) {
+            return res.status(400).json({ error: 'Não é possível apagar um veículo com reservas ativas ou pendentes.' });
+        }
+
+        await vehicle.destroy();
+        return res.json({ message: 'Veículo apagado com sucesso' });
+
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+};
+
+// ── Favoritos: GET /users/me/favorites ─────────────────────────────────────
+exports.getMyFavorites = async (req, res) => {
+    try {
+        const userId = req.userId;
+        if (!userId) {
+            return res.status(401).json({ error: 'Utilizador não autenticado' });
+        }
+
+        const favorites = await FavoritePark.findAll({
+            where: { id_user: userId },
+            include: [{ model: ParkingPark }]
+        });
+
+        const formatted = favorites.map(f => {
+            const park = f.ParkingPark;
+            if (!park) return null;
+            return {
+                id: park.id_park,
+                name: park.name,
+                city: park.city,
+                address: park.address,
+                capacity: park.total_capacity,
+                available: park.total_capacity, // keep consistency with /api/parks
+                open: park.opening_time,
+                close: park.closing_time,
+                lat: Number(park.lat),
+                lng: Number(park.lng),
+                img: park.img || null,
+                price_per_hour: Number(park.price_per_hour),
+                daily_ticket_price: park.daily_ticket_price ? Number(park.daily_ticket_price) : null
+            };
+        }).filter(Boolean);
+
+        return res.json(formatted);
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+};
+
+// Adicionar favorito: POST /users/me/favorites
+exports.addFavorite = async (req, res) => {
+    try {
+        const userId = req.userId;
+        const { id_park } = req.body;
+
+        if (!userId) {
+            return res.status(401).json({ error: 'Utilizador não autenticado' });
+        }
+        if (!id_park) {
+            return res.status(400).json({ error: 'ID do parque não fornecido' });
+        }
+
+        // Verificar se o parque existe
+        const park = await ParkingPark.findByPk(id_park);
+        if (!park) {
+            return res.status(404).json({ error: 'Parque de estacionamento não encontrado' });
+        }
+
+        // Criar ou encontrar favorito
+        const [favorite, created] = await FavoritePark.findOrCreate({
+            where: { id_user: userId, id_park: Number(id_park) }
+        });
+
+        return res.status(201).json({ message: 'Parque adicionado aos favoritos', favorite });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+};
+
+// Remover favorito: DELETE /users/me/favorites/:parkId
+exports.removeFavorite = async (req, res) => {
+    try {
+        const userId = req.userId;
+        const { parkId } = req.params;
+
+        if (!userId) {
+            return res.status(401).json({ error: 'Utilizador não autenticado' });
+        }
+        if (!parkId) {
+            return res.status(400).json({ error: 'ID do parque não fornecido' });
+        }
+
+        const deletedCount = await FavoritePark.destroy({
+            where: { id_user: userId, id_park: Number(parkId) }
+        });
+
+        if (deletedCount === 0) {
+            return res.status(404).json({ error: 'Parque não estava nos favoritos' });
+        }
+
+        return res.json({ message: 'Parque removido dos favoritos' });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+};

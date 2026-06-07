@@ -6,14 +6,14 @@ form.addEventListener('submit', async (event) => {
     // Apanhar os dados postos no formulário
     const name = document.getElementById('reg-name').value.trim();
    const email = document.getElementById('reg-email').value.trim();
-   const plate = document.getElementById('reg-plate').value.trim();
+
    const contact = document.getElementById('reg-contact').value.trim();
    const password = document.getElementById('reg-password').value.trim();
    const confirm = document.getElementById('reg-confirm').value.trim();
 
    //validar as passwords
     if (password !== confirm) {
-         alert('Passwords do not match', 'error');
+         View.showPopup({ title: 'Erro', message: 'As passwords não coincidem. Por favor, verifique e tente novamente.', type: 'error' });
          return;
     }
 
@@ -25,21 +25,20 @@ form.addEventListener('submit', async (event) => {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({name, email, password, contact, plate})
+            body: JSON.stringify({name, email, password, contact})
         });
         const data = await response.json();
 
         if(!response.ok){
-            alert(data.error)
+            View.showPopup({ title: 'Erro no registo', message: data.error, type: 'error' });
             return;
         }
 
-        alert('Registro realizado com sucesso!')
-        window.location.href = 'login.html';
+        View.showPopup({ title: 'Sucesso!', message: 'Registo realizado com sucesso. Agora pode fazer login.', type: 'success', redirect: 'login.html' });
 
     }catch(err){
         console.error('Error:', err);
-        alert('Erro ao ligar o servidor.');
+        View.showPopup({ title: 'Erro de ligação', message: 'Não foi possível ligar ao servidor. Tente novamente mais tarde.', type: 'error' });
     }
 
 })

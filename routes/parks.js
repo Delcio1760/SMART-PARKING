@@ -32,7 +32,9 @@ router.get('/', async (req, res) => {
       lat: Number(park.lat),
 
       lng: Number(park.lng),
-      img: park.img || null
+      img: park.img || null,
+      price_per_hour: Number(park.price_per_hour),
+      daily_ticket_price: park.daily_ticket_price ? Number(park.daily_ticket_price) : null
       
 
     }));
@@ -53,6 +55,9 @@ router.get('/', async (req, res) => {
 
 router.get('/:id/spots', async(req, res) => {
   try{
+    const { cleanupExpiredReservations } = require('../controllers/cleanupController');
+    await cleanupExpiredReservations();
+
     const {ParkingSpot} = require('../models');
     const spots = await ParkingSpot.findAll({
       where:{id_park: req.params.id},

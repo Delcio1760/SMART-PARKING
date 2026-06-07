@@ -50,6 +50,15 @@ module.exports = (sequelize) => {
     img:{
       type: DataTypes.STRING(255),
       allowNull: true
+    },
+    price_per_hour: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+      defaultValue: 1.50
+    },
+    daily_ticket_price: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true
     }
 
   }, {

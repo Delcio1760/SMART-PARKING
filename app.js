@@ -28,11 +28,18 @@ app.use('/api/parks', parksRoutes);
 app.use('/reservations', require('./routes/reservations'));
 
 const { sequelize } = require('./models');
+const { cleanupExpiredReservations } = require('./controllers/cleanupController');
 
-sequelize.sync({ alter: true })
+sequelize.sync()
   .then(() => {
     console.log('MySQL Conectado e Tabelas Sincronizadas!');
     
+    // Executar limpeza inicial no arranque
+    cleanupExpiredReservations();
+
+    // Agendar limpeza a cada 30 segundos
+    setInterval(cleanupExpiredReservations, 30000);
+
     // O servidor só começa a rodar se a BD ligar com sucesso
     app.listen(port, () => {
         console.log(`Servidor  rodando na porta ${port}`);

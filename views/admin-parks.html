@@ -141,8 +141,15 @@
         grid.innerHTML = Model.getParks().map(p => View.renderParkCard(p)).join('');
       }
       // Add park modal
-      document.getElementById('btn-add-park')?.addEventListener('click', () => View.openModal('modal-add-park'));
-      document.querySelectorAll('.modal-close').forEach(b => b.addEventListener('click', () => View.closeModal('modal-add-park')));
+      const modal = document.getElementById('modal-add-park');
+      if (modal) {
+        document.getElementById('btn-add-park')?.addEventListener('click', () => View.openModal('modal-add-park'));
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal || e.target.closest('.modal-close')) {
+            View.closeModal('modal-add-park');
+          }
+        });
+      }
     });
   </script>
 </body>

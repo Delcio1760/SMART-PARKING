@@ -5,6 +5,107 @@
 
 const View = (() => {
 
+  // ── SVG Icons for Popup ───────────────────────────────────────────────
+  const popupIcons = {
+    success: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>`,
+    error: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>`,
+    warning: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>`,
+    info: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/></svg>`,
+  };
+
+  // ── Popup (replaces native alert) ─────────────────────────────────────
+  const showPopup = ({ title = '', message = '', type = 'info', buttonText = 'OK', onClose = null, redirect = null } = {}) => {
+    // Remove any existing popup
+    document.querySelector('.popup-overlay')?.remove();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'popup-overlay';
+    overlay.innerHTML = `
+      <div class="popup-box ${type}">
+        <div class="popup-icon ${type}">${popupIcons[type] || popupIcons.info}</div>
+        <div class="popup-title">${title}</div>
+        <div class="popup-message">${message}</div>
+        <div class="popup-actions">
+          <button class="popup-btn popup-btn-primary" id="popup-ok-btn">${buttonText}</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Animate in on next frame
+    requestAnimationFrame(() => overlay.classList.add('active'));
+
+    const close = () => {
+      overlay.classList.remove('active');
+      setTimeout(() => {
+        overlay.remove();
+        if (onClose) onClose();
+        if (redirect) window.location.href = redirect;
+      }, 250);
+    };
+
+    overlay.querySelector('#popup-ok-btn').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) close();
+    });
+
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') {
+        close();
+        document.removeEventListener('keydown', handleEsc);
+      }
+    };
+    document.addEventListener('keydown', handleEsc);
+  };
+
+  // ── Confirm Popup (replaces native confirm) ──────────────────────────
+  const showConfirm = ({ title = 'Confirmação', message = '', type = 'warning', confirmText = 'Confirmar', cancelText = 'Cancelar' } = {}) => {
+    return new Promise((resolve) => {
+      // Remove any existing popup
+      document.querySelector('.popup-overlay')?.remove();
+
+      const overlay = document.createElement('div');
+      overlay.className = 'popup-overlay';
+      overlay.innerHTML = `
+        <div class="popup-box ${type}">
+          <div class="popup-icon ${type}">${popupIcons[type] || popupIcons.warning}</div>
+          <div class="popup-title">${title}</div>
+          <div class="popup-message">${message}</div>
+          <div class="popup-actions">
+            <button class="popup-btn popup-btn-cancel" id="popup-cancel-btn">${cancelText}</button>
+            <button class="popup-btn popup-btn-primary" id="popup-confirm-btn">${confirmText}</button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(overlay);
+      requestAnimationFrame(() => overlay.classList.add('active'));
+
+      const close = (result) => {
+        overlay.classList.remove('active');
+        setTimeout(() => {
+          overlay.remove();
+          resolve(result);
+        }, 250);
+      };
+
+      overlay.querySelector('#popup-confirm-btn').addEventListener('click', () => close(true));
+      overlay.querySelector('#popup-cancel-btn').addEventListener('click', () => close(false));
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) close(false);
+      });
+
+      const handleEsc = (e) => {
+        if (e.key === 'Escape') {
+          close(false);
+          document.removeEventListener('keydown', handleEsc);
+        }
+      };
+      document.addEventListener('keydown', handleEsc);
+    });
+  };
+
   // ── Navbar ─────────────────────────────────────────────────────────────
   const renderNavbar = (user, isAuthPage = false) => {
     const isLoggedIn = !!user;
@@ -67,7 +168,10 @@ const View = (() => {
         <a href="index.html" class="navbar-logo"><span class="text-accent">Smart</span> Parking</a>
         <div class="navbar-nav">
           <a href="dashboard.html" class="nav-link">Início</a>
-          <input type="text" class="form-input" placeholder="Procurar Parques..." style="width:220px;padding:0.4rem 0.9rem;font-size:0.85rem" id="nav-search">
+          <div class="nav-search-wrapper">
+            <input type="text" class="form-input" placeholder="Procurar Parques..." id="nav-search">
+            <div class="nav-search-dropdown" id="nav-search-dropdown"></div>
+          </div>
           <a href="reservations.html" class="nav-link">Minhas reservas</a>
           <a href="profile.html" class="nav-link text-accent">Meu Perfil</a>
         </div>
@@ -76,6 +180,80 @@ const View = (() => {
         </div>
       </div>
     </nav>`;
+  };
+
+  // ── Init Nav Search (call after parks are loaded) ─────────────────────
+  const initNavSearch = (parks, onParkSelect) => {
+    const input = document.getElementById('nav-search');
+    const dropdown = document.getElementById('nav-search-dropdown');
+    if (!input || !dropdown) return;
+
+    input.addEventListener('input', () => {
+      const query = input.value.trim().toLowerCase();
+
+      if (query.length < 1) {
+        dropdown.classList.remove('visible');
+        return;
+      }
+
+      const filtered = parks.filter(p =>
+        p.name.toLowerCase().includes(query) ||
+        p.city.toLowerCase().includes(query) ||
+        (p.address && p.address.toLowerCase().includes(query))
+      ).slice(0, 6);
+
+      if (filtered.length === 0) {
+        dropdown.innerHTML = `<div class="nav-search-empty">Nenhum parque encontrado para "<strong>${query}</strong>"</div>`;
+      } else {
+        dropdown.innerHTML = filtered.map(p => {
+          const hasSpots = p.available > 0;
+          const badgeCls = hasSpots ? 'available' : 'full';
+          const badgeText = hasSpots ? `${p.available} livres` : 'Lotado';
+          return `
+            <div class="nav-search-item" data-park-id="${p.id}">
+              <div class="nav-search-item-icon">🅿️</div>
+              <div class="nav-search-item-info">
+                <div class="nav-search-item-name">${p.name}</div>
+                <div class="nav-search-item-meta">📍 ${p.city}</div>
+              </div>
+              <span class="availability-badge ${badgeCls}">${badgeText}</span>
+            </div>`;
+        }).join('');
+      }
+
+      dropdown.classList.add('visible');
+
+      // Bind clicks on results
+      dropdown.querySelectorAll('.nav-search-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const parkId = Number(item.dataset.parkId);
+          dropdown.classList.remove('visible');
+          input.value = '';
+          if (onParkSelect) {
+            onParkSelect(parkId);
+          } else {
+            localStorage.setItem('selectedParkId', parkId);
+            window.location.href = 'dashboard.html';
+          }
+        });
+      });
+    });
+
+    // Close dropdown on outside click
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.nav-search-wrapper')) {
+        dropdown.classList.remove('visible');
+      }
+    });
+
+    // Sync with dashboard park-search if on same page
+    input.addEventListener('input', () => {
+      const dashSearch = document.getElementById('park-search');
+      if (dashSearch && dashSearch !== input) {
+        dashSearch.value = input.value;
+        dashSearch.dispatchEvent(new Event('input'));
+      }
+    });
   };
 
   // ── Footer ─────────────────────────────────────────────────────────────
@@ -92,7 +270,7 @@ const View = (() => {
             <div class="footer-heading">Navegação</div>
             <div class="footer-links">
               <a href="index.html">Início</a>
-              <a href="index.html#sobre">Sobre Nós</a>
+              <a href="about.html">Sobre Nós</a>
               <a href="register.html">Registo</a>
               <a href="login.html">Login</a>
             </div>
@@ -121,7 +299,7 @@ const View = (() => {
     </footer>`;
 
   // ── Park Card ──────────────────────────────────────────────────────────
-  const renderParkCard = (park) => {
+  const renderParkCard = (park, isFavorite = false) => {
     const occupancy = Math.round(((park.capacity - park.available) / park.capacity) * 100);
     return `
     <div class="park-card" data-park-id="${park.id}">
@@ -131,7 +309,10 @@ const View = (() => {
         <div class="park-card-info">📍 ${park.city}</div>
         <div class="park-card-spots">${park.available} lugares disponíveis</div>
       </div>
-      <div class="park-card-footer">
+      <div class="park-card-footer" style="display:flex; justify-content:space-between; align-items:center; width:100%">
+        <button class="btn-favorite ${isFavorite ? 'active' : ''}" data-id="${park.id}" title="${isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}">
+          ${isFavorite ? '★' : '☆'}
+        </button>
         <button class="btn btn-primary btn-sm btn-reserve" data-id="${park.id}">Agendar</button>
       </div>
     </div>`;
@@ -250,6 +431,9 @@ const View = (() => {
     renderUserRow,
     renderStars,
     showToast,
+    showPopup,
+    showConfirm,
+    initNavSearch,
     openModal,
     closeModal,
     renderStatCard,
