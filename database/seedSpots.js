@@ -6,10 +6,11 @@ async function seedSpots(){
         await sequelize.authenticate();
         console.log('MySQL conectado');
 
-        //Buscar todos os parques de estacionamento
-        const parks = await ParkingPark.findAll({raw: true}); // Sem o "raw: true" para obter o nome por exemplo teria de ser park.dataValues.name
-                                                              // com "raw: true" o resultado vem como um objeto simples, daí é só fazer park.name
-                                                              // Porque aqui só precisamos de ler os dados dos parques não os modificar, se precissase modicar aí não o usariamos porque perderiamos os metodos .save() e .update()
+        // Buscar todos os parques de estacionamento
+        const parks = await ParkingPark.findAll({raw: true});
+        
+        // Limpar lugares existentes para evitar duplicações
+        await ParkingSpot.destroy({ where: {} });
         for(const park of parks){
             const spots = [];
             const total = park.total_capacity;
